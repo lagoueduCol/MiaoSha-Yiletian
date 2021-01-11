@@ -18,6 +18,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/sirupsen/logrus"
+
+	"github.com/letian0805/seckill/infrastructure/mysql"
+
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +37,10 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("admin called")
+		err := mysql.Init()
+		if err != nil {
+			logrus.Error(err)
+		}
 	},
 }
 

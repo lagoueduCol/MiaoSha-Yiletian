@@ -1,7 +1,7 @@
 all: build
 
 build:
-	go build -o seckill main.go
+	go build -o bin/seckill main.go
 
 clean:
 	rm seckill

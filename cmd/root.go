@@ -17,8 +17,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/letian0805/seckill/infrastructure/utils"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -48,6 +53,8 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	logrus.Info(cfgFile)
 }
 
 func init() {
@@ -89,4 +96,6 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+	utils.InitLogger()
+	utils.WatchClusterConfig()
 }

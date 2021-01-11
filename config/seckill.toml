@@ -1,0 +1,26 @@
+[global]
+    logLevel = "info"
+    pid = "./.pid"
+
+[mysql]
+    address = "127.0.0.1:3306"
+    username = "root"
+    password = "123"
+    database = "seckill"
+
+[redis]
+    address = "127.0.0.1:6379"
+    auth = "abcdefg"
+
+[etcd]
+    endpoints = ["127.0.0.1:2379"]
+
+[api]
+    bind = "127.0.0.1:8080"
+    pid = "./api.pid"
+
+[admin]
+    bind = "127.0.0.1:8081"
+
+[blacklist]
+    filePath = "./blacklist.txt"

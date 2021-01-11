@@ -17,6 +17,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/letian0805/seckill/interfaces/api"
+	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
@@ -33,6 +39,24 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("api called")
+		onExit := make(chan error)
+		go func() {
+			if err := api.Run(); err != nil {
+				logrus.Error(err)
+				onExit <- err
+			}
+			close(onExit)
+		}()
+		onSignal := make(chan os.Signal)
+		signal.Notify(onSignal, syscall.SIGINT, syscall.SIGTERM)
+		select {
+		case sig := <-onSignal:
+			api.Exit()
+			logrus.Info("exit by signal ", sig)
+		case err := <-onExit:
+			logrus.Info("exit by error ", err)
+		}
+
 	},
 }
 
