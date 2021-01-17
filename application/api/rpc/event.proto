@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package rpc;
+
+message Goods {
+  int32 id = 1;
+  string desc = 2;
+  string img = 3;
+  string price = 4;
+  string event_price = 5;
+  int32 event_stock = 6;
+}
+
+message Event {
+  int32 id = 1;
+  int32 topic_id = 2;
+  int64 start_time = 3;
+  int64 end_time = 4;
+  int32 limit = 5;
+  repeated Goods goods_list = 6;
+}
+
+message Topic {
+  int32 id = 1;
+  string title = 2;
+  string desc = 3;
+  string banner = 4;
+  int64 start_time = 5;
+  int64 end_time = 6;
+}
+
+message Response {
+  int32 code = 1;
+  string msg = 2;
+}
+
+service EventRPC {
+  rpc EventOnline(Event) returns(Response);
+  rpc EventOffline(Event) returns(Response);
+  rpc TopicOnline(Topic) returns(Response);
+  rpc TopicOffline(Topic) returns(Response);
+}

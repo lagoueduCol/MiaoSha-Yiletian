@@ -16,11 +16,13 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/letian0805/seckill/interfaces/admin"
 
 	"github.com/sirupsen/logrus"
-
-	"github.com/letian0805/seckill/infrastructure/mysql"
 
 	"github.com/spf13/cobra"
 )
@@ -28,32 +30,29 @@ import (
 // adminCmd represents the admin command
 var adminCmd = &cobra.Command{
 	Use:   "admin",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Seckill admin server.",
+	Long:  `Seckill admin server.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("admin called")
-		err := mysql.Init()
-		if err != nil {
-			logrus.Error(err)
+		onExit := make(chan error)
+		go func() {
+			if err := admin.Run(); err != nil {
+				logrus.Error(err)
+				onExit <- err
+			}
+			close(onExit)
+		}()
+		onSignal := make(chan os.Signal)
+		signal.Notify(onSignal, syscall.SIGINT, syscall.SIGTERM)
+		select {
+		case sig := <-onSignal:
+			logrus.Info("exit by signal ", sig)
+			admin.Exit()
+		case err := <-onExit:
+			logrus.Info("exit by error ", err)
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(adminCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// adminCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// adminCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

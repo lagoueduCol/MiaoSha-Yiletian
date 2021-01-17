@@ -1,20 +1,16 @@
-package api
+package admin
 
 import (
 	"net/http"
 
-	"github.com/letian0805/seckill/infrastructure/utils"
-
-	"github.com/sirupsen/logrus"
-
 	"github.com/gin-gonic/gin"
+	"github.com/letian0805/seckill/infrastructure/utils"
+	"github.com/sirupsen/logrus"
 )
 
 type Event struct{}
 
-type Shop struct{}
-
-func (e *Event) List(ctx *gin.Context) {
+func (t *Event) Post(ctx *gin.Context) {
 	resp := &utils.Response{
 		Code: 0,
 		Data: nil,
@@ -22,12 +18,12 @@ func (e *Event) List(ctx *gin.Context) {
 	}
 	status := http.StatusOK
 
-	logrus.Info("event list")
+	logrus.Info("event post")
 
 	ctx.JSON(status, resp)
 }
 
-func (e *Event) Info(ctx *gin.Context) {
+func (t *Event) Get(ctx *gin.Context) {
 	resp := &utils.Response{
 		Code: 0,
 		Data: nil,
@@ -35,12 +31,12 @@ func (e *Event) Info(ctx *gin.Context) {
 	}
 	status := http.StatusOK
 
-	logrus.Info("event info")
+	logrus.Info("event get")
 
 	ctx.JSON(status, resp)
 }
 
-func (e *Event) Subscribe(ctx *gin.Context) {
+func (t *Event) Put(ctx *gin.Context) {
 	resp := &utils.Response{
 		Code: 0,
 		Data: nil,
@@ -48,12 +44,12 @@ func (e *Event) Subscribe(ctx *gin.Context) {
 	}
 	status := http.StatusOK
 
-	logrus.Info("event subscribe")
+	logrus.Info("event put")
 
 	ctx.JSON(status, resp)
 }
 
-func (s *Shop) AddCart(ctx *gin.Context) {
+func (t *Event) Delete(ctx *gin.Context) {
 	resp := &utils.Response{
 		Code: 0,
 		Data: nil,
@@ -61,7 +57,20 @@ func (s *Shop) AddCart(ctx *gin.Context) {
 	}
 	status := http.StatusOK
 
-	logrus.Info("shop add cart")
+	logrus.Info("event delete")
+
+	ctx.JSON(status, resp)
+}
+
+func (t *Event) Status(ctx *gin.Context) {
+	resp := &utils.Response{
+		Code: 0,
+		Data: nil,
+		Msg:  "ok",
+	}
+	status := http.StatusOK
+
+	logrus.Info("event status")
 
 	ctx.JSON(status, resp)
 }

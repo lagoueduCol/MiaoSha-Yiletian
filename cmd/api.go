@@ -16,10 +16,12 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+
+	"github.com/letian0805/seckill/interfaces/rpc"
 
 	"github.com/letian0805/seckill/interfaces/api"
 	"github.com/sirupsen/logrus"
@@ -30,46 +32,47 @@ import (
 // apiCmd represents the api command
 var apiCmd = &cobra.Command{
 	Use:   "api",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Seckill api server.",
+	Long:  `Seckill api server.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("api called")
-		onExit := make(chan error)
+		wg := &sync.WaitGroup{}
+		wg.Add(2)
+		onApiExit := make(chan error, 1)
+		onRpcExit := make(chan error, 1)
 		go func() {
+			defer wg.Done()
 			if err := api.Run(); err != nil {
 				logrus.Error(err)
-				onExit <- err
+				onApiExit <- err
 			}
-			close(onExit)
+			close(onApiExit)
+		}()
+		go func() {
+			defer wg.Done()
+			if err := rpc.Run(); err != nil {
+				logrus.Error(err)
+				onRpcExit <- err
+			}
+			close(onRpcExit)
 		}()
 		onSignal := make(chan os.Signal)
 		signal.Notify(onSignal, syscall.SIGINT, syscall.SIGTERM)
 		select {
 		case sig := <-onSignal:
-			api.Exit()
 			logrus.Info("exit by signal ", sig)
-		case err := <-onExit:
+			api.Exit()
+			rpc.Exit()
+		case err := <-onApiExit:
+			rpc.Exit()
+			logrus.Info("exit by error ", err)
+		case err := <-onRpcExit:
+			api.Exit()
 			logrus.Info("exit by error ", err)
 		}
-
+		wg.Wait()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(apiCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// apiCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// apiCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

@@ -1,13 +1,12 @@
-package api
+package admin
 
 import (
 	"net"
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/letian0805/seckill/infrastructure/utils"
-
 	"github.com/gin-gonic/gin"
+	"github.com/letian0805/seckill/infrastructure/utils"
 	"github.com/spf13/viper"
 )
 
@@ -15,21 +14,18 @@ var lis net.Listener
 
 func Run() error {
 	var err error
-	bind := viper.GetString("api.bind")
-	logrus.Info("run api server on ", bind)
+	bind := viper.GetString("admin.bind")
+	logrus.Info("run admin server on ", bind)
 	lis, err = utils.Listen("tcp", bind)
 	if err != nil {
 		return err
 	}
 
 	g := gin.New()
-	// TODO: 初始化路由
 
 	// 更新程序，给老版本发送信号
-	go utils.UpdateProc("api")
+	go utils.UpdateProc("admin")
 
-	// 监控黑名单变更
-	utils.WatchBlacklist()
 	// 初始化路由
 	initRouters(g)
 	// 运行服务
@@ -40,5 +36,5 @@ func Exit() {
 	lis.Close()
 	// TODO: 等待请求处理完
 	// time.Sleep(10 * time.Second)
-	logrus.Info("api server exit")
+	logrus.Info("admin server exit")
 }
