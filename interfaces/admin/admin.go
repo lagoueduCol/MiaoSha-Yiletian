@@ -1,7 +1,10 @@
 package admin
 
 import (
+	"encoding/json"
 	"net"
+
+	"github.com/letian0805/seckill/infrastructure/cluster"
 
 	"github.com/sirupsen/logrus"
 
@@ -28,6 +31,15 @@ func Run() error {
 
 	// 初始化路由
 	initRouters(g)
+
+	cluster.Init("seckill")
+	if nodes, err := cluster.Discover(); err == nil {
+		log, _ := json.Marshal(nodes)
+		logrus.Info("discover nodes ", string(log))
+	} else {
+		logrus.Error("discover nodes error:", err)
+	}
+
 	// 运行服务
 	return g.RunListener(lis)
 }

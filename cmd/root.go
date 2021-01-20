@@ -19,16 +19,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/letian0805/seckill/infrastructure/cluster"
 	"github.com/letian0805/seckill/infrastructure/logger"
-
-	"github.com/letian0805/seckill/infrastructure/utils"
-
-	"github.com/sirupsen/logrus"
-
-	"github.com/spf13/cobra"
-
+	"github.com/letian0805/seckill/infrastructure/stores/etcd"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 )
 
 var cfgFile string
@@ -88,7 +86,14 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	} else {
+		panic(err)
+	}
+	if err := etcd.Init(); err != nil {
+		panic(err)
 	}
 	logger.InitLogger()
-	utils.WatchClusterConfig()
+	if err := cluster.WatchClusterConfig(); err != nil {
+		panic(err)
+	}
 }

@@ -14,9 +14,12 @@ func InitLogger() {
 	if logLevel == "debug" {
 		gin.SetMode(gin.DebugMode)
 		logrus.SetLevel(logrus.DebugLevel)
-	} else {
+	} else if logLevel == "info" {
 		gin.SetMode(gin.ReleaseMode)
 		logrus.SetLevel(logrus.InfoLevel)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+		logrus.SetLevel(logrus.ErrorLevel)
 	}
 	formatter := &logrus.JSONFormatter{
 		TimestampFormat:  time.RFC3339,

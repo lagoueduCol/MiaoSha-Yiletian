@@ -16,11 +16,11 @@
     endpoints = ["127.0.0.1:2379"]
 
 [api]
-    bind = "127.0.0.1:8080"
-    rpc = "127.0.0.1:8082"
+    bind = "0.0.0.0:8080"
+    rpc = "0.0.0.0:8082"
 
 [admin]
-    bind = "127.0.0.1:8081"
+    bind = "0.0.0.0:8081"
 
 [blacklist]
     filePath = "./blacklist.txt"
