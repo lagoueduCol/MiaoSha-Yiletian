@@ -3,6 +3,8 @@ package api
 import (
 	"net"
 
+	"github.com/letian0805/seckill/infrastructure/stores/redis"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/letian0805/seckill/infrastructure/utils"
@@ -28,6 +30,9 @@ func Run() error {
 	// 更新程序，给老版本发送信号
 	go utils.UpdateProc("api")
 
+	if err := redis.Init(); err != nil {
+		return err
+	}
 	// 监控黑名单变更
 	utils.WatchBlacklist()
 	// 初始化路由

@@ -2,14 +2,16 @@ package event
 
 import "github.com/letian0805/seckill/domain/product"
 
-type Event struct {
-	Topic  string    `json:"topic"`
-	Banner string    `json:"banner"`
-	List   []*Detail `json:"list"`
-	Count  int       `json:"count"`
+type Topic struct {
+	ID     string   `json:"id"`
+	Topic  string   `json:"topic"`
+	Banner string   `json:"banner"`
+	List   []*Event `json:"list"`
+	Count  int      `json:"count"`
 }
 
-type Detail struct {
+type Event struct {
+	ID        string   `json:"id"`
 	StartTime int64    `json:"start_time"`
 	EndTime   int64    `json:"end_time"`
 	List      []*Goods `json:"list"`
