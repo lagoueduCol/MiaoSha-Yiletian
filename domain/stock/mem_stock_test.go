@@ -1,10 +1,7 @@
 package stock
 
 import (
-	"sync"
 	"testing"
-
-	"github.com/letian0805/seckill/infrastructure/utils"
 )
 
 func TestMemStock(t *testing.T) {
@@ -37,28 +34,4 @@ func TestMemStock(t *testing.T) {
 	} else if val != 0 {
 		t.Fatal("not equal 0")
 	}
-}
-
-func BenchmarkMemStock(b *testing.B) {
-	b.ReportAllocs()
-	b.StartTimer()
-	c := utils.NewMemCache(10)
-	for i := 0; i < b.N; i++ {
-		c.Set("101", int64(i))
-		c.Get("101")
-		c.Del("101")
-	}
-	b.StopTimer()
-}
-
-func BenchmarkSyncMap(b *testing.B) {
-	b.ReportAllocs()
-	b.StartTimer()
-	c := sync.Map{}
-	for i := 0; i < b.N; i++ {
-		c.Store("101", int64(i))
-		c.Load("101")
-		c.Delete("101")
-	}
-	b.StopTimer()
 }
