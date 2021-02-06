@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/letian0805/seckill/domain/user"
+
 	"github.com/letian0805/seckill/infrastructure/utils"
 
 	"github.com/sirupsen/logrus"
@@ -64,4 +66,29 @@ func (s *Shop) AddCart(ctx *gin.Context) {
 	logrus.Info("shop add cart")
 
 	ctx.JSON(status, resp)
+}
+
+type User struct{}
+
+func (u User) Login(ctx *gin.Context) {
+	var (
+		uid    string
+		passwd string
+		ok     bool
+	)
+	if uid, ok = ctx.GetPostForm("uid"); !ok {
+		utils.Abort(ctx, http.StatusUnauthorized, "login failed")
+		return
+	}
+	if passwd, ok = ctx.GetPostForm("password"); !ok {
+		utils.Abort(ctx, http.StatusUnauthorized, "login failed")
+		return
+	}
+	info, token := user.Login(uid, passwd)
+	if info != nil {
+		ctx.Header(user.TokenHeader, user.TokenPrefix+token)
+		utils.ResponseJSON(ctx, http.StatusOK, "success", nil)
+	} else {
+		utils.Abort(ctx, http.StatusUnauthorized, "login failed")
+	}
 }

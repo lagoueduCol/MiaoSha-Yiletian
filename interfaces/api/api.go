@@ -25,7 +25,6 @@ func Run() error {
 	}
 
 	g := gin.New()
-	// TODO: 初始化路由
 
 	// 更新程序，给老版本发送信号
 	go utils.UpdateProc("api")
