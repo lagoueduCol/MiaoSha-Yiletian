@@ -16,6 +16,12 @@ type Task interface {
 	Do()
 }
 
+type TaskFunc func()
+
+func (tf TaskFunc) Do() {
+	tf()
+}
+
 type worker struct {
 	number   int
 	size     int
