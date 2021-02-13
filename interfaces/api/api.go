@@ -3,6 +3,8 @@ package api
 import (
 	"net"
 
+	"github.com/letian0805/seckill/domain/shop"
+
 	"github.com/letian0805/seckill/infrastructure/stores/redis"
 
 	"github.com/sirupsen/logrus"
@@ -36,6 +38,8 @@ func Run() error {
 	utils.WatchBlacklist()
 	// 初始化路由
 	initRouters(g)
+	// 初始化 shop
+	shop.Init()
 	// 运行服务
 	return g.RunListener(lis)
 }

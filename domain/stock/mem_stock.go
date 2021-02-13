@@ -13,7 +13,7 @@ type memStock struct {
 }
 
 var (
-	cache stores.IntCache
+	cache = stores.NewIntCache()
 
 	ErrNotFound = errors.New("not found")
 )
@@ -44,7 +44,7 @@ func (ms *memStock) Get() (int64, error) {
 	return val, nil
 }
 
-func (ms *memStock) Sub() (int64, error) {
+func (ms *memStock) Sub(uid string) (int64, error) {
 	return cache.Add(ms.key, -1), nil
 }
 

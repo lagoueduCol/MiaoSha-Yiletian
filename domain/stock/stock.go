@@ -14,7 +14,7 @@ type Stock interface {
 	// 直接返回剩余库存
 	Get() (int64, error)
 	// 尝试扣减一个库存，并返回剩余库存
-	Sub() (int64, error)
+	Sub(uid string) (int64, error)
 	// 删除库存数据
 	Del() error
 	// 返回活动 ID
@@ -47,9 +47,28 @@ func (rs *redisStock) Set(val int64, expiration int64) error {
 	return cli.Set(rs.key, val, time.Duration(expiration)*time.Second).Err()
 }
 
-func (rs *redisStock) Sub() (int64, error) {
+func (rs *redisStock) Sub(uid string) (int64, error) {
 	cli := redis.GetClient()
-	return cli.Decr(rs.key).Result()
+	script := `
+	local history=redis.call('get',KEYS[1])
+	local stock=redis.call('get', KEYS[2])
+	if (history and history >= '1') or stock==false or stock <= '0' then
+		return -1
+	else
+		stock=redis.call('decr', KEYS[2])
+		if stock >= 0 and redis.call('set', KEYS[1], '1', 'ex', 86400) then
+			return stock
+		else
+			return -1
+		end
+	end`
+	if res, err := cli.Eval(script, []string{fmt.Sprintf("%s#%s", rs.key, uid), rs.key}).Result(); err != nil {
+		return -1, err
+	} else if resInt, ok := res.(int64); ok && resInt != -1 {
+		return resInt, nil
+	} else {
+		return -1, errors.New("redis error")
+	}
 }
 
 func (rs *redisStock) Get() (int64, error) {

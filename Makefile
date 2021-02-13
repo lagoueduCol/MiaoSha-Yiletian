@@ -9,4 +9,7 @@ build:
 clean:
 	rm bin/seckill
 
+runApi:
+	./bin/seckill api -c ./config/seckill.toml
+
 .PHONY: clean build all

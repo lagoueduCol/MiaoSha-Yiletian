@@ -24,15 +24,15 @@ func initRouters(g *gin.Engine) {
 
 	subscribe := g.Group("/event/subscribe").Use(middlewares.NewAuthMiddleware(true))
 	subscribe.POST("/", eventApp.Subscribe)
-
-	shopCB := utils.NewCircuitBreaker(
-		utils.WithDuration(100),
-		utils.WithTotalLimit(1000),
-		utils.WithLatencyLimit(200),
-		utils.WithFailsLimit(5),
-	)
-	shopCBMdw := middlewares.NewCircuitBreakMiddleware(shopCB)
-	shop := g.Group("/shop").Use(shopCBMdw, middlewares.NewAuthMiddleware(true), middlewares.Blacklist)
+	//
+	//shopCB := utils.NewCircuitBreaker(
+	//	utils.WithDuration(100),
+	//	utils.WithTotalLimit(1000),
+	//	utils.WithLatencyLimit(200),
+	//	utils.WithFailsLimit(5),
+	//)
+	//shopCBMdw := middlewares.NewCircuitBreakMiddleware(shopCB)
+	shop := g.Group("/shop") //.Use(shopCBMdw, middlewares.NewAuthMiddleware(true), middlewares.Blacklist)
 	shopApp := api.Shop{}
 	shop.PUT("/cart/add", shopApp.AddCart)
 }

@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/letian0805/seckill/domain/stock"
+
+	"github.com/letian0805/seckill/domain/shop"
+
 	"github.com/letian0805/seckill/domain/user"
 
 	"github.com/letian0805/seckill/infrastructure/utils"
@@ -68,9 +72,49 @@ func (s *Shop) AddCart(ctx *gin.Context) {
 	}
 	status := http.StatusOK
 
-	logrus.Info("shop add cart")
+	params := struct {
+		GoodsID string `json:"goods_id"`
+		EventID string `json:"event_id"`
+	}{}
+	var userInfo *user.Info
+	if v, ok := ctx.Get("userInfo"); ok {
+		userInfo, _ = v.(*user.Info)
+	}
 
-	ctx.JSON(status, resp)
+	err := ctx.BindJSON(&params)
+	if err != nil || params.EventID == "" || params.GoodsID == "" || userInfo == nil {
+		resp.Msg = "bad request"
+		status = http.StatusBadRequest
+		ctx.JSON(status, resp)
+		return
+	}
+	logrus.Info(params)
+
+	st, _ := stock.NewMemStock(params.EventID, params.GoodsID)
+	if s, _ := st.Sub(userInfo.UID); s < 0 {
+		resp.Code = shop.ErrNoStock
+		resp.Msg = "no stock"
+		ctx.JSON(http.StatusOK, resp)
+		return
+	}
+
+	conn, w, err1 := ctx.Writer.Hijack()
+	if err1 != nil {
+		resp.Msg = "bad request"
+		status = http.StatusBadRequest
+		ctx.JSON(status, resp)
+		return
+	}
+	logrus.Info("shop add cart")
+	shopCtx := &shop.Context{
+		Request: ctx.Request,
+		Conn:    conn,
+		Writer:  w,
+		GoodsID: params.GoodsID,
+		EventID: params.EventID,
+		UID:     userInfo.UID,
+	}
+	shop.Handle(shopCtx)
 }
 
 type User struct{}

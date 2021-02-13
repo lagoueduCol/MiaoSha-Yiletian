@@ -21,7 +21,7 @@ func TestMemStock(t *testing.T) {
 	} else if val != 10 {
 		t.Fatal("not equal 10")
 	}
-	if val, err = st.Sub(); err != nil {
+	if val, err = st.Sub("123"); err != nil {
 		t.Fatal(err)
 	} else if val != 9 {
 		t.Fatal("not equal 9")
@@ -29,7 +29,7 @@ func TestMemStock(t *testing.T) {
 	if err = st.Del(); err != nil {
 		t.Fatal(err)
 	}
-	if val, err = st.Get(); err != nil {
+	if val, err = st.Get(); err != ErrNotFound {
 		t.Fatal(err)
 	} else if val != 0 {
 		t.Fatal("not equal 0")
