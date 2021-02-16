@@ -56,7 +56,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	flags := rootCmd.PersistentFlags()
-	flags.StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.seckill.toml)")
+	flags.StringVarP(&cfgFile, "config", "c", "./config/seckill.toml", "config file (default is $HOME/.seckill.toml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

@@ -52,6 +52,8 @@ func runTest(b *testing.B, f func(i int, wg *sync.WaitGroup)) *sync.WaitGroup {
 	runtime.GC()
 	b.ReportAllocs()
 	b.ResetTimer()
+	var memStats1 runtime.MemStats
+	runtime.ReadMemStats(&memStats1)
 	wg := &sync.WaitGroup{}
 	wg.Add(b.N)
 
@@ -61,10 +63,10 @@ func runTest(b *testing.B, f func(i int, wg *sync.WaitGroup)) *sync.WaitGroup {
 	}
 
 	//输出内存信息
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
-	b.ReportMetric(float64(memStats.HeapInuse)/(1024*1024), "heap(MB)")
-	b.ReportMetric(float64(memStats.StackInuse)/(1024*1024), "stack(MB)")
+	var memStats2 runtime.MemStats
+	runtime.ReadMemStats(&memStats2)
+	b.ReportMetric(float64(memStats2.HeapInuse-memStats1.HeapInuse)/(1024*1024), "heap(MB)")
+	b.ReportMetric(float64(memStats2.StackInuse-memStats1.StackInuse)/(1024*1024), "stack(MB)")
 	return wg
 }
 

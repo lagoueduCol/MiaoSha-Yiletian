@@ -6,11 +6,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/letian0805/seckill/infrastructure/stores"
+	. "github.com/letian0805/seckill/infrastructure/stores"
 )
 
 func TestIntCache(t *testing.T) {
-	c := stores.NewIntCache()
+	c := NewIntCache()
 	key := "test"
 	c.Set(key, 1)
 	if v, ok := c.Get(key); !ok || v != 1 {
@@ -25,12 +25,34 @@ func TestIntCache(t *testing.T) {
 	}
 }
 
+func TestIntCache_Add(t *testing.T) {
+	cache := NewIntCache()
+	cases := []struct {
+		key    string
+		delta  int64
+		expect int64
+	}{
+		{"test1", 0, 0},
+		{"test1", 1, 1},
+		{"test1", -1, 0},
+		{"test1", 0, 0},
+		{"test2", 1, 1},
+		{"test3", -1, -1},
+	}
+	for _, c := range cases {
+		if cache.Add(c.key, c.delta) != c.expect {
+			t.Fatal(c)
+		}
+	}
+}
+
 func TestObjCache(t *testing.T) {
-	c := stores.NewObjCache()
+	c := NewObjCache()
 	key := "test"
 	c.Set(key, int64(1))
 	if v, ok := c.Get(key); !ok || v.(int64) != 1 {
 		t.Fatal("failed")
+		t.Error()
 	}
 	c.Del(key)
 	if _, ok := c.Get(key); ok {
@@ -51,7 +73,7 @@ func initKeys(b *testing.B) []string {
 	return keys
 }
 
-func initIntCache(b *testing.B, c stores.IntCache, keys []string) {
+func initIntCache(b *testing.B, c IntCache, keys []string) {
 	l := len(keys)
 	for i := 0; i < b.N; i++ {
 		c.Set(keys[i%l], int64(i))
@@ -65,7 +87,7 @@ func initSyncMap(b *testing.B, c sync.Map, keys []string) {
 	}
 }
 
-func initObjCache(b *testing.B, c stores.ObjCache, keys []string) {
+func initObjCache(b *testing.B, c ObjCache, keys []string) {
 	l := len(keys)
 	for i := 0; i < b.N; i++ {
 		c.Set(keys[i%l], int64(i))
@@ -74,7 +96,7 @@ func initObjCache(b *testing.B, c stores.ObjCache, keys []string) {
 
 func BenchmarkIntCache_Add(b *testing.B) {
 	keys := initKeys(b)
-	c := stores.NewIntCache()
+	c := NewIntCache()
 	initIntCache(b, c, keys)
 	l := len(keys)
 
@@ -86,9 +108,49 @@ func BenchmarkIntCache_Add(b *testing.B) {
 	b.StopTimer()
 }
 
+func benchmarkCacheSet(b *testing.B, setter func(key string, val int64), keys []string) {
+	b.ReportAllocs()
+	b.StartTimer()
+	l := len(keys)
+	for i := 0; i < b.N; i++ {
+		setter(keys[i%l], int64(i))
+	}
+	b.StopTimer()
+}
+
+func BenchmarkCache_Set(b *testing.B) {
+	keys := make([]string, b.N, b.N)
+	for i := 0; i < b.N; i++ {
+		keys[i] = strconv.Itoa(i)
+	}
+	b.ResetTimer()
+
+	b.Run("intCache", func(b *testing.B) {
+		c := NewIntCache()
+		setter := func(key string, val int64) {
+			c.Set(key, val)
+		}
+		benchmarkCacheSet(b, setter, keys)
+	})
+	b.Run("objCache", func(b *testing.B) {
+		c := NewObjCache()
+		setter := func(key string, val int64) {
+			c.Set(key, val)
+		}
+		benchmarkCacheSet(b, setter, keys)
+	})
+	b.Run("syncMap", func(b *testing.B) {
+		c := sync.Map{}
+		setter := func(key string, val int64) {
+			c.Store(key, val)
+		}
+		benchmarkCacheSet(b, setter, keys)
+	})
+}
+
 func BenchmarkIntCache_Set(b *testing.B) {
 	keys := initKeys(b)
-	c := stores.NewIntCache()
+	c := NewIntCache()
 
 	b.ReportAllocs()
 	b.StartTimer()
@@ -98,7 +160,7 @@ func BenchmarkIntCache_Set(b *testing.B) {
 
 func BenchmarkObjCache_Set(b *testing.B) {
 	keys := initKeys(b)
-	c := stores.NewObjCache()
+	c := NewObjCache()
 
 	b.ReportAllocs()
 	b.StartTimer()
@@ -118,7 +180,7 @@ func BenchmarkSyncMap_Set(b *testing.B) {
 
 func BenchmarkIntCache_Get(b *testing.B) {
 	keys := initKeys(b)
-	c := stores.NewIntCache()
+	c := NewIntCache()
 	initIntCache(b, c, keys)
 	l := len(keys)
 
@@ -132,7 +194,7 @@ func BenchmarkIntCache_Get(b *testing.B) {
 
 func BenchmarkObjCache_Get(b *testing.B) {
 	keys := initKeys(b)
-	c := stores.NewObjCache()
+	c := NewObjCache()
 	initObjCache(b, c, keys)
 	l := len(keys)
 
@@ -160,7 +222,7 @@ func BenchmarkSyncMap_Get(b *testing.B) {
 
 func BenchmarkIntCache_Del(b *testing.B) {
 	keys := initKeys(b)
-	c := stores.NewIntCache()
+	c := NewIntCache()
 	initIntCache(b, c, keys)
 	l := len(keys)
 
@@ -174,7 +236,7 @@ func BenchmarkIntCache_Del(b *testing.B) {
 
 func BenchmarkObjCache_Del(b *testing.B) {
 	keys := initKeys(b)
-	c := stores.NewObjCache()
+	c := NewObjCache()
 	initObjCache(b, c, keys)
 	l := len(keys)
 

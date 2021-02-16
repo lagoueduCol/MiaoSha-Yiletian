@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/letian0805/seckill/domain/stock"
 
@@ -29,10 +28,6 @@ func (e *Event) List(ctx *gin.Context) {
 	}
 	status := http.StatusOK
 
-	now := time.Now().UnixNano()
-	if now%10 == 0 {
-		time.Sleep(time.Millisecond * 15)
-	}
 	//logrus.Info("event list")
 
 	ctx.JSON(status, resp)
