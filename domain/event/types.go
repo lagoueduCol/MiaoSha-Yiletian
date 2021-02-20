@@ -30,3 +30,33 @@ type Info struct {
 	StartTime  int64  `json:"start_time"`
 	EndTime    int64  `json:"end_time"`
 }
+
+var TestData *Topic
+
+func init() {
+	t := &Topic{
+		ID:        0,
+		Topic:     "test",
+		Banner:    "",
+		StartTime: 0,
+		EndTime:   0,
+		List:      []*Event{},
+	}
+	for i := 0; i < 10; i++ {
+		t.List = append(t.List, &Event{
+			ID:        0,
+			StartTime: 0,
+			EndTime:   0,
+			List:      []*Goods{},
+		})
+		for j := 0; j < 10; j++ {
+			g := &Goods{
+				Goods:      product.Goods{},
+				EventPrice: "",
+				EventType:  "",
+			}
+			t.List[i].List = append(t.List[i].List, g)
+		}
+	}
+	TestData = t
+}

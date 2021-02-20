@@ -36,7 +36,7 @@ func Auth(token string) *Info {
 			logrus.Error(err)
 		}
 	}()
-	cipher, err := aes.NewCipher(authKey)
+	cipher, err := aes.NewCipher(padding(authKey, 16))
 	if err != nil {
 		logrus.Error(err)
 		return nil
@@ -71,13 +71,14 @@ func Login(uid string, passwd string) (*Info, string) {
 	if err != nil {
 		return nil, ""
 	}
-	cipher, err1 := aes.NewCipher(authKey)
+	cipher, err1 := aes.NewCipher(padding(authKey, 16))
 	if err1 != nil {
 		logrus.Error(err1)
 		return nil, ""
 	}
-	data = padding(data, cipher.BlockSize())
-	dst := make([]byte, len(data))
-	cipher.Encrypt(dst, data)
-	return info, base64.StdEncoding.EncodeToString(dst)
+	data1 := padding(data, cipher.BlockSize())
+	dst := make([]byte, len(data1))
+	cipher.Encrypt(dst, data1)
+	logrus.Info(len(data), len(data1))
+	return info, base64.StdEncoding.EncodeToString(dst[:len(data)])
 }

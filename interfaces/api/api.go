@@ -9,9 +9,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/letian0805/seckill/infrastructure/utils"
+	"github.com/gin-contrib/pprof"
 
 	"github.com/gin-gonic/gin"
+	"github.com/letian0805/seckill/infrastructure/utils"
 	"github.com/spf13/viper"
 )
 
@@ -40,6 +41,7 @@ func Run() error {
 	initRouters(g)
 	// 初始化 shop
 	shop.Init()
+	pprof.Register(g)
 	// 运行服务
 	return g.RunListener(lis)
 }

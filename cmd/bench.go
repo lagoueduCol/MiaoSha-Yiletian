@@ -43,9 +43,12 @@ var benchCmd = &cobra.Command{
 	},
 }
 
-var requests int32
-var concurrency int
-var url string
+var (
+	requests    int32
+	concurrency int
+	url         string
+	keepalive   bool
+)
 
 func init() {
 	rootCmd.AddCommand(benchCmd)
@@ -57,6 +60,7 @@ func init() {
 	benchCmd.PersistentFlags().Int32VarP(&requests, "requests", "r", 10000, "requests")
 	benchCmd.PersistentFlags().IntVarP(&concurrency, "concurrency", "C", 50, "concurrency")
 	benchCmd.PersistentFlags().StringVarP(&url, "url", "u", "", "url")
+	benchCmd.PersistentFlags().BoolVarP(&keepalive, "keepalive", "k", false, "k")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
@@ -77,15 +81,22 @@ func doBench() {
 		go func() {
 			cli := &http.Client{
 				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{
-						InsecureSkipVerify: false,
-					},
+					TLSClientConfig: &tls.Config{},
 				},
 				Timeout: 10 * time.Second,
 			}
 			wg1.Done()
 			<-startCh
 			for atomic.AddInt32(&reqs, -1) >= 0 {
+				if !keepalive {
+					cli = &http.Client{
+						Transport: &http.Transport{
+							TLSClientConfig:   &tls.Config{},
+							DisableKeepAlives: true,
+						},
+						Timeout: 10 * time.Second,
+					}
+				}
 				resp, err := cli.Get(url)
 				if err != nil || resp.StatusCode > 404 {
 					logrus.Error(err)
@@ -96,6 +107,9 @@ func doBench() {
 				if resp != nil {
 					ioutil.ReadAll(resp.Body)
 					resp.Body.Close()
+				}
+				if !keepalive {
+					cli.CloseIdleConnections()
 				}
 			}
 			wg.Done()

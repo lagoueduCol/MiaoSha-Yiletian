@@ -57,10 +57,6 @@ func init() {
 
 	flags := rootCmd.PersistentFlags()
 	flags.StringVarP(&cfgFile, "config", "c", "./config/seckill.toml", "config file (default is $HOME/.seckill.toml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.

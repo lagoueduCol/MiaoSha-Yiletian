@@ -31,8 +31,12 @@ func initRouters(g *gin.Engine) {
 		utils.WithLatencyLimit(200),
 		utils.WithFailsLimit(5),
 	)
-	shopCBMdw := middlewares.NewCircuitBreakMiddleware(shopCB)
-	shop := g.Group("/shop").Use(shopCBMdw, middlewares.NewAuthMiddleware(true), middlewares.Blacklist)
+	mdws := []gin.HandlerFunc{
+		middlewares.NewCircuitBreakMiddleware(shopCB),
+		middlewares.NewAuthMiddleware(true),
+		middlewares.Blacklist,
+	}
+	shop := g.Group("/shop").Use(mdws...)
 	shopApp := api.Shop{}
 	shop.PUT("/cart/add", shopApp.AddCart)
 }

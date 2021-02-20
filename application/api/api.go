@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/letian0805/seckill/domain/event"
+
 	"github.com/letian0805/seckill/domain/stock"
 
 	"github.com/letian0805/seckill/domain/shop"
@@ -23,7 +25,7 @@ type Shop struct{}
 func (e *Event) List(ctx *gin.Context) {
 	resp := &utils.Response{
 		Code: 0,
-		Data: nil,
+		Data: event.TestData,
 		Msg:  "ok",
 	}
 	status := http.StatusOK
