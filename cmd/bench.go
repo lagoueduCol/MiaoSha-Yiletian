@@ -16,7 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -25,10 +27,48 @@ import (
 	"sync/atomic"
 	"time"
 
+	etcdv3 "github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/mvcc/mvccpb"
+	"github.com/letian0805/seckill/infrastructure/stores/etcd"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
+
+type Task struct {
+	ID          int      `json:"id"`
+	Servers     []string `json:"servers"`
+	Path        string   `json:"path"`
+	Method      string   `json:"method"`
+	Data        string   `json:"data"`
+	ContentType string   `json:"content_type"`
+	Concurrency int      `json:"concurrency"`
+	Number      int      `json:"number"`
+	Duration    int      `json:"duration"`
+	Status      int32    `json:"status"`
+}
+
+type TaskManager struct {
+	sync.Mutex
+	task Task
+}
+
+func (tm *TaskManager) onConfigChange(task Task) {
+	if atomic.LoadInt32(&tm.task.Status) == 1 {
+		atomic.StoreInt32(&tm.task.Status, 2)
+	}
+
+	for atomic.LoadInt32(&tm.task.Status) == 2 {
+		time.Sleep(time.Second)
+	}
+	tm.Lock()
+	tm.task = task
+	tm.Unlock()
+	if task.Status == 1 {
+		tm.task.doBench()
+	}
+}
 
 // benchCmd represents the bench command
 var benchCmd = &cobra.Command{
@@ -40,6 +80,9 @@ var benchCmd = &cobra.Command{
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.Info("requests ", requests, " concurrency ", concurrency, " url ", url)
 		doBench()
+
+		// TODO: 还需要加上初始化 etcd 的代码，待完善
+		// watchTaskConfig((&TaskManager{}).onConfigChange)
 	},
 }
 
@@ -65,6 +108,54 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// benchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func watchTaskConfig(callback func(cfg Task)) error {
+	var err error
+	cli := etcd.GetClient()
+	key := "/bench/task/config"
+	update := func(kv *mvccpb.KeyValue) (bool, error) {
+		if string(kv.Key) == key {
+			var tmpConfig Task
+			err = json.Unmarshal(kv.Value, &tmpConfig)
+			if err != nil {
+				logrus.Error("update bench config failed, error:", err)
+				return false, err
+			}
+			logrus.Info("update bench config ", tmpConfig)
+			callback(tmpConfig)
+			return true, nil
+		}
+		return false, nil
+	}
+	watchCh := cli.Watch(context.Background(), key)
+	for resp := range watchCh {
+		for _, evt := range resp.Events {
+			if evt.Type == etcdv3.EventTypePut {
+				if ok, err := update(evt.Kv); ok {
+					break
+				} else if err != nil {
+					break
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (t *Task) doBench() {
+	wg := &sync.WaitGroup{}
+	wg.Add(t.Concurrency)
+	for i := 0; i < t.Concurrency; i++ {
+		go func() {
+			for atomic.LoadInt32(&t.Status) == 1 {
+				// do test
+			}
+			atomic.StoreInt32(&t.Status, 3)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }
 
 func doBench() {
